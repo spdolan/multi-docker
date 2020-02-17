@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t seandolan/react-test -f ./client/Dockerfile.dev ./client
+script:
+  - docker run -e CI=true seandolan/react-test yarn test
+
+after_success:
+  - docker build -t seandolan/multi-client ./client
+  - docker build -t seandolan/multi-nginx ./nginx
+  - docker build -t seandolan/multi-server ./server
+  - docker build -t seandolan/multi-worker ./worker
+  # Login to Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password stdin
+  # push into Docker Hub
+  - docker push seandolan/multi-client
+  - docker push seandolan/multi-nginx
+  - docker push seandolan/multi-server
+  - docker push seandolan/multi-worker
